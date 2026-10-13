@@ -1,0 +1,26 @@
+# Render Blueprint for the OA Care API (FastAPI). Deploys natively with Python — no Docker.
+# Render → New → Blueprint → select this repo. Values marked `sync: false` are prompted for.
+services:
+  - type: web
+    name: oa-care-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # --proxy-headers so the rate limiter sees each visitor's real IP instead of Render's proxy.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.2
+      - key: DATABASE_URL
+        sync: false # Supabase Session pooler URI, starting postgresql+psycopg2:// (encode @ in the password as %40)
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false # e.g. https://your-app.vercel.app (no trailing slash)
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "10080"
+      - key: DEFAULT_ADMIN_PASSWORD
+        sync: false
